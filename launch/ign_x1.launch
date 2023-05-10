@@ -1,0 +1,84 @@
+<launch>
+
+    <param name="use_sim_time" value="true"/>
+
+    <env name="IGN_GAZEBO_RESOURCE_PATH" value="$(find simulation_ugv)/models:$(find simulation_ugv)/models/sensors:$(find simulation_ugv)/worlds/:$(find simulation_ugv)/models/ctu_cras_norlab_x500_sensor_config_2/meshes/"/>
+
+    <arg name="ugv_able" default="true" />
+   
+    # --------------------------------------------------------------------- PARAMETER --------------------------------------------------------------------- 
+    ## Parameter
+    <arg name="world_name" default="empty"/>
+    <arg name="model" default="X1/model.sdf"/>
+    <arg name="ugv_name" default="X1" />
+    #UGV Parameter Define real/simulation and controller type
+    <arg name="simulation" value="true" />                                  <!-- Define if it will run on a robot or simulation -->
+
+    # --------------------------------------------------------------------- NODES --------------------------------------------------------------------- 
+    
+    # ---------------------------------------------------Start Gazebo environment ---------------------------------------------------
+    # Node regarding with World
+    <include file="$(find ros_ign_gazebo)/launch/ign_gazebo.launch">
+        <arg name="ign_args" value="-r -v 4 $(find simulation_ugv)/worlds/$(arg world_name).world"/>
+        <env name="IGN_GAZEBO_RESOURCE_PATH" value="$(optenv IGN_GAZEBO_RESOURCE_PATH):$(find simulation_ugv)/models:$(find simulation_ugv)/models/sensors:$(find simulation_ugv)/worlds/"/>
+    </include>
+
+     # Spawn the node. IMPORTANT: the world name must be the same as the filename of the world file
+    <arg name="x_pos" default="0.0" /> 
+    <arg name="y_pos" default="0.0" />
+    <arg name="z_pos" default="0.0" />
+    <arg name="y_rot" default="0.0" />
+
+    <node
+        pkg="ros_ign_gazebo"
+        type="create"
+        name="robot_X1_spawn"
+        output="screen"
+        args="-world $(arg world_name) -file $(find simulation_ugv)/models/$(arg model) -name robot_X1 -allow_renaming true -x $(arg x_pos) -y $(arg y_pos) -z $(arg z_pos) -Y $(arg y_rot) --timeout 100000 ">
+    </node>
+
+    # node provides a network bridge which enables the exchange of messages between ROS and Gazebo Transport
+        ## args: declare inf. about mesage to exchange (format: name_topic@type_ros_msgs@type_ign_gazebo_msgs )
+    <node
+        pkg="ros_ign_bridge"
+        type="parameter_bridge"
+        name="$(anon ros_ign_bridge)"
+        output="screen"
+        args="
+            /world/$(arg world_name)/pose/info@tf2_msgs/TFMessage@ignition.msgs.Pose_V
+            /clock@rosgraph_msgs/Clock@ignition.msgs.Clock  
+
+            /arco/os1_cloud_node/points@sensor_msgs/PointCloud2@ignition.msgs.PointCloudPacked 
+            /arco/imu@sensor_msgs/Imu@ignition.msgs.IMU
+            /arco/idmind_motors/set_velocities@geometry_msgs/Twist@ignition.msgs.Twist 
+            /arco/odometry@nav_msgs/Odometry@ignition.msgs.Odometry
+            /arco/tf_odom_to_baselink@tf2_msgs/TFMessage@ignition.msgs.Pose_V
+            ">
+        <!-- <remap from="/arco/tf_odom_to_baselink" to ="/tf"/>   #Publish odom tf 
+        <remap from="/arco/os1_cloud_node/points" to="/arco_os1_cloud_node/points_non_dense" />
+        <remap from="/arco/imu" to="/arco/idmind_imu/imu" />
+        <remap from="/arco/odometry" to="/arco/odom" /> -->
+    </node>
+
+    <node pkg="simulation_ugv" type="ign_clock_publisher" name="ign_clock_publisher"/>
+
+    # --------------------------------------------------- UGV Simulation ---------------------------------------------------
+
+    <include file="$(find marsupial_launchers)/arco_launch/frames_arco.launch" if="$(arg ugv_able)"/>
+
+
+    # Start interface node
+    <include file="$(find idmind_interface)/launch/idmind_interface.launch" if="$(arg ugv_able)"/>
+    
+    # Start idmind_teleop
+    <include file="$(find idmind_teleop)/launch/idmind_teleop.launch" if="$(arg ugv_able)">
+        <arg name="cmd_vel_topic" default="/$(arg ugv_name)/cmd_vel_joy" />
+    </include>
+
+    <node pkg="timed_roslaunch" type="timed_roslaunch.sh" name="timed_ugv_dll" output="screen"
+            args="10 marsupial_launchers dll_arco.launch imu_topic:=/arco/idmind_imu/imu in_cloud_topic:=/arco_os1_cloud_node/points_non_dense map:=$(arg world_name)" 
+            if="$(arg ugv_able)">
+    </node>
+
+
+</launch>
