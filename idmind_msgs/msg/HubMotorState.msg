@@ -1,0 +1,12 @@
+int32 driver_id
+float32 bus_voltage
+float32 left_encoder
+float32 left_position
+float32 left_velocity
+float32 left_torque
+float32 left_temperature
+float32 right_encoder
+float32 right_position
+float32 right_velocity
+float32 right_torque
+float32 right_temperature

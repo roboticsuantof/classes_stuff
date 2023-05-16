@@ -1,0 +1,7 @@
+string destiny
+string task
+string params
+int8 priority
+---
+bool success
+string msg

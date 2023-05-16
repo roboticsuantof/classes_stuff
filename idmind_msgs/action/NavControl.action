@@ -1,0 +1,10 @@
+# Path to follow
+nav_msgs/Path path
+---
+#result definition
+geometry_msgs/PoseStamped final_pose
+float32 completed
+---
+#feedback
+geometry_msgs/PoseStamped current_pose
+float32 completed

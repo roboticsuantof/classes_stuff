@@ -1,0 +1,8 @@
+bool electronic_battery
+bool motor_battery
+bool cable_power
+bool bumper
+bool enable_to_epos
+bool emergency_stop
+bool motor_button_ON
+bool motor_enable_ON
