@@ -1,0 +1,11 @@
+<!--
+-->
+<launch>
+  
+  # TFs
+  <node pkg="tf2_ros" type="static_transform_publisher" name="tf_X1_imu" args="0.16 0.0 0.312 0 0 0.0 X1/base_link X1/imu" />
+  <node pkg="tf2_ros" type="static_transform_publisher" name="tf_X1_os1_sensor" args="0.08 0.0 0.456 0 0 0.0 X1/base_link X1/os1_sensor" />
+  <node pkg="tf2_ros" type="static_transform_publisher" name="tf_X1_os1_imu" args="0.006253 -0.011775 0.007645 0.0 0.0 0.0 1.0 X1/os1_sensor X1/os1_imu"/>
+  <node pkg="tf2_ros" type="static_transform_publisher" name="tf_X1_os1_lidar" args="0 0.0 0.03618 3.1416 0.0 0.0 X1/os1_sensor X1/os1_lidar"/>
+   
+</launch>	
